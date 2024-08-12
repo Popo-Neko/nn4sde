@@ -1,7 +1,7 @@
 # Base settings 
 dim: 1      # num of dimensions
 M: 100000     # num of paths type=int
-N: 10000     # num of time steps type=int
+N: 1000     # num of time steps type=int
 T: 1.0      # terminal time
 
 # Initial values
