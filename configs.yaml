@@ -1,0 +1,9 @@
+# Base settings 
+dim: 1      # num of dimensions
+M: 100000     # num of paths type=int
+N: 10000     # num of time steps type=int
+T: 1.0      # terminal time
+
+# Initial values
+x0: 1       # initial value of X
+y0: 0.2     # initial value of Y
