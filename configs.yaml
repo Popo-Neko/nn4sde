@@ -1,9 +1,9 @@
 # Base settings 
-dim: 1      # num of dimensions
-M: 100000     # num of paths type=int
-N: 1000     # num of time steps type=int
+M: 5     # num of paths type=int
+step: 100     # num of time steps type=int
+D: 50     # dim of brownian motion type=int
+N: 50   # num of assets type=int
 T: 1.0      # terminal time
 
 # Initial values
 x0: 1       # initial value of X
-y0: 0.2     # initial value of Y
