@@ -85,16 +85,14 @@ class GeometricBrownianMotionND(SDE):
                  drift: np.ndarray,
                  volatility: np.ndarray):
         '''
-        drift: mu, shape=(N, 1), np.ndarray
-        volatility: sigma, shape=(N, N), np.ndarray
+        drift: mu, shape=(N, 1), np.ndarray. N is the num of assets(return vector) 
+        volatility: sigma, shape=(N, D), np.ndarray. D is the num of dw dimensions(diffusion matrix)
         '''
-        self.dirft = drift
+        self.drift = drift
         self.volatility = volatility
-        self.dimension = self.dirft.shape[0]
-        assert all([len(self.dirft.shape) == 2, len(self.volatility.shape) == 2, 
-                   self.volatility.shape[1] == self.volatility.shape[0], self.dirft.shape[1] == 1,
-                   self.dirft.shape[0] == self.volatility.shape[0]]), "1. mu and sigma are 2D np.array \n2. mu.shape=(N, 1) \n3. sigma.shape=(N,N)"
-        
+        self.N = self.dirft.shape[0]
+        self.D = self.volatility.shape[1]
+        assert self.dirft.shape[0] == self.volatility.shape[0], "drift and volatility must have the same num of assets"
     
     def mu(self, x, t=None):
         # x: (M, 1) M = path
@@ -103,14 +101,36 @@ class GeometricBrownianMotionND(SDE):
     
     def sigma(self, x, t=None):
         # x: (M, 1) M = path
-        # return: (M, N, N)
-        results = np.zeros((x.shape[0], self.dimension, self.dimension))
+        # return: (M, N, D)
+        results = np.zeros((x.shape[0], self.N, self.D))
         for i in range(x.shape[0]):
             results[i] = x[i]*self.volatility
         return results
 
 
 class BlackSchloesCall1D(GeometricBrownianMotion1D):
+    def __init__(self, 
+                 drift,
+                 volatility,
+                 strike,
+                 risk_free_rate, configs):
+        super().__init__(drift, volatility, configs)
+        self.strike = strike
+        self.interest_rate = risk_free_rate
+        self.d1 = (np.log(self.x0/self.strike) + (self.dirft + 0.5*self.volatility**2)*self.T)/(self.volatility*np.sqrt(self.T))
+        self.d2 = self.d1 - self.volatility*np.sqrt(self.T)
+
+    def f(self, y):
+        return  -y*self.interst_rate
+    
+    def terminal_condition(self, y):
+        return max(0, y - self.strike)
+    
+    def exact_solution(self):
+        return self.x0*norm.cdf(self.d1) - self.strike*np.exp(-self.interest_rate*self.T)*norm.cdf(self.d2)
+
+
+class BlackSchloesCallND(GeometricBrownianMotionND):
     def __init__(self, 
                  drift,
                  volatility,
