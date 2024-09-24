@@ -83,16 +83,19 @@ class GeometricBrownianMotion1D(SDE):
 class GeometricBrownianMotionND(SDE):
     def __init__(self,
                  drift: np.ndarray,
-                 volatility: np.ndarray):
+                 volatility: np.ndarray,
+                 configs: yaml):
         '''
-        drift: mu, shape=(N, 1), np.ndarray. N is the num of assets(return vector) 
-        volatility: sigma, shape=(N, D), np.ndarray. D is the num of dw dimensions(diffusion matrix)
+        drift: mu, shape=(N, 1), np.ndarray
+        volatility: sigma, shape=(N, N), np.ndarray
         '''
         self.drift = drift
         self.volatility = volatility
-        self.N = self.dirft.shape[0]
-        self.D = self.volatility.shape[1]
-        assert self.dirft.shape[0] == self.volatility.shape[0], "drift and volatility must have the same num of assets"
+        self.dimension = self.dirft.shape[0]
+        assert all([len(self.dirft.shape) == 2, len(self.volatility.shape) == 2, 
+                   self.volatility.shape[1] == self.volatility.shape[0], self.dirft.shape[1] == 1,
+                   self.dirft.shape[0] == self.volatility.shape[0]]), "1. mu and sigma are 2D np.array \n2. mu.shape=(N, 1) \n3. sigma.shape=(N,N)"
+        
     
     def mu(self, x, t=None):
         # x: (M, 1) M = path
@@ -101,8 +104,8 @@ class GeometricBrownianMotionND(SDE):
     
     def sigma(self, x, t=None):
         # x: (M, 1) M = path
-        # return: (M, N, D)
-        results = np.zeros((x.shape[0], self.N, self.D))
+        # return: (M, N, N)
+        results = np.zeros((x.shape[0], self.dimension, self.dimension))
         for i in range(x.shape[0]):
             results[i] = x[i]*self.volatility
         return results
@@ -150,7 +153,89 @@ class BlackSchloesCallND(GeometricBrownianMotionND):
     
     def exact_solution(self):
         return self.x0*norm.cdf(self.d1) - self.strike*np.exp(-self.interest_rate*self.T)*norm.cdf(self.d2)
-  
+
+class EuropeanAssetBasketCall(SDE):
+    def __init__(self,
+                 drift: np.ndarray,
+                 volatility: np.ndarray,
+                 strike: float,
+                 risk_free_rate: float,
+                 shares: np.ndarray,
+                 x0: np.ndarray,
+                 configs: yaml):
+        super().__init__()
+        self.dirft = drift # shape=(dim, 1)
+        self.volatility = volatility # shape=(dim, dim)
+        self.strike = strike # scalar
+        self.interest_rate = risk_free_rate # scalar
+        self.dim = self.dirft.shape[0] # num of assets
+        self.shares = shares # shape=(dim, 1) num of outstanding shares
+        self.x0 = x0 # shape=(dim, 1) initial stock price
+        self.d1 = (np.log(np.matmul(self.x0.T, self.shares)/self.strike) + (self.dirft + 0.5*np.matmul(np.matmul(self.shares.T, self.volatility), self.shares))*self.T)/(np.sqrt(np.matmul(np.matmul(self.shares.T, self.volatility), self.shares))*np.sqrt(self.T))
+        self.load_config(configs)
+        assert all([len(self.dirft.shape) == 2, len(self.volatility.shape) == 2, 
+                   self.volatility.shape[1] == self.volatility.shape[0], self.dirft.shape[1] == 1,
+                   self.dirft.shape[0] == self.volatility.shape[0]]), "1. mu and sigma are 2D np.array \n2. mu.shape=(dim, 1) \n3. sigma.shape=(dim,dim)"
+    
+    def sample(self):
+        self.N, self.M = int(self.N), int(self.M)
+        dt = self.T/self.N
+        dw = np.zeros((self.M, self.N, self.dim)) # shape: [M, dim, N]
+        for i in range(self.N):
+            dw[:, :, i] = np.sqrt(dt) * np.random.multivariate_normal(np.zeros(self.dim), self.volatility, size=self.M)
+        t = np.linspace(0, self.T, self.N+1) # shape: [N+1]
+        return t, dw, dt
+    
+    # x is the stock price in a time step (M, dim)
+    def mu(self, x, t=None):
+        # x: (M, dim) M = path
+        # x*self.dirft.T
+        # return: (M, dim)
+        return x*self.dirft.T
+    
+    def sigma(self, x, t=None):
+        # x: (M, dim) M = path
+        # return: (M, dim, dim)
+        std = np.sqrt(np.diag(self.volatility)).reshape((1, self.dim))
+        return x*std
+    
+    # def mv(self, x):
+    #     # market value
+    #     # x: (M, dim) M = path
+    #     # return: (M, 1)
+    #     return np.matmul(x, self.shares)
+    
+    # def weight(self, x):
+    #     # x: (M, dim) M = path
+    #     # return: (M, dim)
+    #     market_value = self.mv(x)
+    #     return x/market_value
+    
+    def simulate(self, scheme="euler"):
+        '''
+        x0: initial value(shape: [M, dim])
+        T: terminal time(scalar)
+        N: number of time steps(scalar)
+        M: number of paths(scalar)
+        scheme: simulation scheme, "euler" or "milstein"
+        return: time grid, simulated paths
+        '''
+        t, dw, dt = self.sample() 
+        x = np.zeros((self.M, self.dim, self.N+1))
+        x[:, :, 0] = self.x0
+        if scheme == "euler":
+            for i in tqdm(range(self.N), desc="Simulating Steps"):
+                x[:, :, i+1] = x[:, :, i] + self.mu(x[:, :, i], t[i])*dt + np.matmul(self.sigma(x[:, :, i], t[i]), dw[:, :, i].T).T
+        elif scheme == "milstein":
+            for i in tqdm(range(self.N), desc="Simulating Steps"):
+                x[:, :, i+1] = x[:, :, i] + self.mu(x[:, :, i], t[i])*dt + np.matmul(self.sigma(x[:, :, i], t[i]), dw[:, :, i].T).T + 0.5*np.matmul(self.sigma(x[:, :, i], t[i]), self.sigma(x[:, :, i], t[i]).T)*(dw[:, :, i]**2 - dt)
+        else:
+            raise ValueError("scheme must be 'euler' or 'milstein'")
+        return t, x, dw
+    
+    def exact_solution(self):
+        return self.x0*norm.cdf(self.d1) - self.strike*np.exp(-self.interest_rate*self.T)*norm.cdf(self.d2)
+    
     
 if  __name__ == "__main__":
     l1 = []
