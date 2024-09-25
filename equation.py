@@ -7,7 +7,10 @@ import yaml
 from typing import List, Tuple
 import os
 from scipy.stats import norm
-
+import torch
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
+from sampler import Sampler
 
 # define a abstract SDE
 class SDE(abc.ABC):
@@ -95,20 +98,13 @@ class GeometricBrownianMotionND(SDE):
         self.load_config(configs)
         self.D = self.volatility.shape[1]
         self.N = self.drift.shape[0]
+        self.dt = self.T/self.step
         # x0 shape = [N, 1]
         if x0 is None:
             self.x0 = np.array([self.x0 for i in range(self.N)]).reshape((self.N, 1))
         else:
             self.x0 = x0
         assert self.drift.shape[0] == self.volatility.shape[0], "mu and sigma must have the same num of assets"
-    
-    def sample(self):
-        self.step, self.M = int(self.step), int(self.M) # number of time steps and paths
-        dt = self.T/self.step # time step
-        dW = np.sqrt(dt)*np.random.randn(self.M, self.step, self.N,self.D) # shape: [M, step, N, D]
-        t = np.linspace(0, self.T, self.step+1) # shape: [step+1]
-        return t, dW, dt
-        
         
     def mu(self, x, t=None):
         # x: (M, N) M = path
@@ -136,7 +132,18 @@ class GeometricBrownianMotionND(SDE):
         scheme: simulation scheme, "euler" or "milstein"
         return: time grid, simulated paths
         '''
-        t, dW, dt = self.sample() 
+        self.step, self.M= int(self.step), int(self.M) # number of time steps and paths
+        # dt: time step
+        dt = self.T/self.step # time step
+        
+        # dW: brownian motion, shape: [M, step, N, D]
+        dW = np.sqrt(dt)*np.random.randn(self.M, self.step, self.D) # shape: [M, step, D]
+        # reshape dW to [M, step, N, D]
+        dW = np.repeat(dW[:, :, np.newaxis, :], self.N, axis=2)
+        
+        # t: time grid, shape: [step+1] t0, t1, ..., tN
+        t = np.linspace(0, self.T, self.step+1) # shape: [step+1]
+        
         x = np.zeros((self.M, self.step+1, self.N))  # shape: [M, step+1, N]
         x[:, 0, :] = self.x0.T
         for i in tqdm(range(self.step), desc="Simulating Steps"):
@@ -228,19 +235,21 @@ class EuropeanBasketOptionCall(GeometricBrownianMotionND):
     def terminal_condition(self, x):
         y = self.index(x)
         return np.array([max(0, (y[i] - self.strike).item()) for i in range(self.M)]).reshape((self.M, 1))
-    
-    
+
+
+     
 if  __name__ == "__main__":
-    mu = 0.05  
-    sigma = 0.2
-    strike = 4
-    rf = 0.05
-    # test for 1D
-    stock = GeometricBrownianMotion1D(mu, sigma, 'configs.yaml')
-    call = BlackSchloesCall1D(mu, sigma, strike, rf, configs='configs.yaml')
+    # # test for 1D
+    # mu = 0.05  
+    # sigma = 0.2
+    # strike = 4
+    # rf = 0.05
+
+    # stock = GeometricBrownianMotion1D(mu, sigma, 'configs.yaml')
+    # call = BlackSchloesCall1D(mu, sigma, strike, rf, configs='configs.yaml')
     
-    # y as call exact price
-    y_exact = call.exact_solution()
+    # # y as call exact price
+    # y_exact = call.exact_solution()
 
     # t, x, dw = stock.simulate(scheme='euler')
     
@@ -253,6 +262,37 @@ if  __name__ == "__main__":
     stock_index = EuropeanBasketOptionCall(mu, sigma, strike, rf, 'configs.yaml', shares)
     t, x, dw = stock_index.simulate(scheme='euler')
     y = stock_index.terminal_condition(x)
+    # save monte carlo results
+    np.save('x.npy', x)
+    np.save('y_mc.npy', y)
+    np.save('dw.npy', dw)
+    
+    # test for neural network
+    # train_iter
+    sample = Sampler(stock_index)
+    train_iter = DataLoader(sample, batch_size=2, shuffle=True)
+    
+    # model set up
+    model = Net1(50, [64, 128, 64], 50)
+    model.init_weights()
+    
+    # loss function
+    l2 = nn.MSELoss()
+    
+    # sgd optimizer
+    optimizer = torch.optim.SGD(model.parameters(), lr=1e-5)
+    
+    # parameters
+    epochs = 10 
+    time_steps = 100
+
+    # training
+    # for epoch in range(epochs):
+    #     w_test, x_test = next(iter(train_iter))
+    #     for step in range(time_steps):
+        
+    
+    
     
     
     
