@@ -63,7 +63,7 @@ class Net4Y(Net4Z):
         # y_init torch.tensor (M, 1) all ones vector
         self.y_init = torch.ones(self.equation.M, 1)
         # z_init torch.tensor (M, D) normal random vector N(0, 0.025)
-        self.z_init = torch.randn(self.equation.M, self.equation.D) * 0.05
+        self.z_init = torch.ones(self.equation.M, self.equation.D) * 0.05
         
         
     def forward(self, inputs):
@@ -76,6 +76,8 @@ class Net4Y(Net4Z):
             z = self.net(x[:, t, :])
         # terminal condition
         y = y - self.equation.f(y)*dt + torch.sum(z*dw[:, -1, 1, :], dim=1, keepdim=True)
+        # take max(0, y)
+        y = torch.max(y, torch.zeros_like(y))
         return y    
     
     def init_weights(self):

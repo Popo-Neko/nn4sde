@@ -45,7 +45,7 @@ class BSDESolver:
     def loss(self, inputs):
         y_pred = self.net(inputs)
         y_mc = self.equation.terminal_condition(inputs[1])
-        diff = y_pred - torch.tensor(y_mc, dtype=torch.float32)
+        diff = y_pred - y_mc
         loss = torch.mean(diff**2)
         return loss
 
