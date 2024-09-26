@@ -63,7 +63,8 @@ class Net4Y(Net4Z):
         z = self.z_init
         dt = self.dt
         for t in range(self.equation.step):
-            y = y - self.equation.f()
+            dw = dw[:, t, 1, :]
+            y = y - self.equation.f(y) + 
         
     
     def init_weights(self):
