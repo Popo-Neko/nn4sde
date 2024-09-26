@@ -1,0 +1,22 @@
+# Feyman-Kac settings
+simulation:
+  M: 5     # num of paths type=int
+  step: 100     # num of time steps type=int
+  D: 50     # dim of brownian motion type=int
+  N: 50   # num of assets type=int
+  T: 1.0      # terminal time
+  x0: 1       # initial value of X
+
+# Neural network settings
+net:
+  hidden_dim: [64, 128, 64] # hidden layer dimensions type=list
+
+# Training settings
+train:
+  lr: 0.001     # learning rate type=float
+  epochs: 1000  # num of epochs type=int
+  batch_size: 64 # batch size type=int
+  seed: 42      # random seed type=int
+  device: 'cpu' # device type=str
+  optimizer: 'sgd' # 'adam' or 'sgd' type=str
+

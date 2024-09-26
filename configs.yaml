@@ -1,9 +1,0 @@
-# Base settings 
-M: 5     # num of paths type=int
-step: 100     # num of time steps type=int
-D: 50     # dim of brownian motion type=int
-N: 50   # num of assets type=int
-T: 1.0      # terminal time
-
-# Initial values
-x0: 1       # initial value of X

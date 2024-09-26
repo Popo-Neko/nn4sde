@@ -27,7 +27,7 @@ class SDE(abc.ABC):
     def load_config(self, configs):
         with open(configs, 'r') as f:
             config_data = yaml.safe_load(f)
-            for key, value in config_data.items():
+            for key, value in config_data['simulation'].items():
                 setattr(self, key, value)
 
 
@@ -203,38 +203,20 @@ class EuropeanBasketOptionCall(GeometricBrownianMotionND):
     def f(self, y):
         return -y*self.interest_rate
     
-    def mv(self, x):
-        '''
-        x: (M, step+1, N)
-        return: (M, N)
-        '''
-        market_value = x[:, -1, :]*self.shares.T
-        return market_value
-    
-    def weight(self, x):
-        '''
-        x: (M, step+1, N)
-        return: (M, N)
-        '''
-        market_value = self.mv(x)
-        total_value = market_value.sum(axis=1)
-        weight = np.zeros((self.M, self.N))
-        for i in range(self.N):
-            weight[:, i] = market_value[:, i]/total_value
-        return weight
-    
-    def index(self, x):
-        '''
-        stock index is calculated by market value weighted stock price
-        x: (M, step+1, N)
-        return: (M, 1)
-        '''
-        weight = self.weight(x)
-        return (weight*x[:, -1, :]).sum(axis=1).reshape((self.M, 1))
-    
     def terminal_condition(self, x):
-        y = self.index(x)
-        return np.array([max(0, (y[i] - self.strike).item()) for i in range(self.M)]).reshape((self.M, 1))
+        market_value = x[:, -1, :] * self.shares.T
+        total_value = market_value.sum(axis=1)
+
+        weight = np.zeros((self.M, self.N)) if isinstance(x, np.ndarray) else torch.zeros((self.M, self.N), dtype=x.dtype)
+        for i in range(self.N):
+            weight[:, i] = market_value[:, i] / total_value
+
+        y = (weight * x[:, -1, :]).sum(axis=1).reshape((self.M, 1))
+
+        if isinstance(x, np.ndarray):
+            return np.maximum(0, (y - self.strike).reshape((self.M, 1)))
+        else:
+            return torch.maximum(torch.tensor(0.0).to(y.device), (y - self.strike).reshape((self.M, 1)))
 
 
      
@@ -262,34 +244,8 @@ if  __name__ == "__main__":
     stock_index = EuropeanBasketOptionCall(mu, sigma, strike, rf, 'configs.yaml', shares)
     t, x, dw = stock_index.simulate(scheme='euler')
     y = stock_index.terminal_condition(x)
-    # save monte carlo results
-    np.save('x.npy', x)
-    np.save('y_mc.npy', y)
-    np.save('dw.npy', dw)
     
-    # test for neural network
-    # train_iter
-    sample = Sampler(stock_index)
-    train_iter = DataLoader(sample, batch_size=2, shuffle=True)
     
-    # model set up
-    model = Net1(50, [64, 128, 64], 50)
-    model.init_weights()
-    
-    # loss function
-    l2 = nn.MSELoss()
-    
-    # sgd optimizer
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-5)
-    
-    # parameters
-    epochs = 10 
-    time_steps = 100
-
-    # training
-    # for epoch in range(epochs):
-    #     w_test, x_test = next(iter(train_iter))
-    #     for step in range(time_steps):
         
     
     
