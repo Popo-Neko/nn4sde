@@ -17,15 +17,22 @@ class Net4Z(nn.Module):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
-        self.hidden_layers = [nn.Linear(self.hidden_dim[i], self.hidden_dim[i+1]) for i in range(len(self.hidden_dim)-1)]
+        self.hidden_layers = []
+        self.hidden_layers.append(nn.BatchNorm1d(self.hidden_dim[0]))
+        for i in range(len(self.hidden_dim)-1):
+            self.hidden_layers.append(nn.ReLU())
+            self.hidden_layers.append(nn.Linear(self.hidden_dim[i], self.hidden_dim[i+1]))
+            self.hidden_layers.append(nn.BatchNorm1d(self.hidden_dim[i+1]))
+            self.hidden_layers.append(nn.ReLU())
+        self.hidden_layers = nn.Sequential(*self.hidden_layers)
         self.input_layer = nn.Linear(self.input_dim, self.hidden_dim[0])
         self.output_layer = nn.Linear(self.hidden_dim[-1], self.output_dim)
         self.relu = nn.ReLU()
         
+        
     def forward(self, x):
-        x = self.relu(self.input_layer(x))
-        for layer in self.hidden_layers:
-            x = self.relu(layer(x))
+        x = self.input_layer(x)
+        x = self.hidden_layers(x)
         x = self.output_layer(x)
         return x
     
@@ -59,17 +66,14 @@ class Net4Y(Net4Z):
                 
         super(Net4Y, self).__init__(self.input_dim, self.hidden_dim, self.output_dim)
         self.net = Net4Z(self.input_dim, self.hidden_dim, self.output_dim)
-    
-    def init_variables(self, batch_size):
-        # y_init torch.tensor (M, 1) all ones vector
-        y_init = torch.ones(batch_size, 1)
-        # z_init torch.tensor (M, D) 
-        z_init = torch.ones(batch_size, self.equation.D) * 0.1
-        return y_init, z_init
+        
+        self.y_init = nn.Parameter(torch.ones(1))
+        self.z_init = nn.Parameter(torch.ones(1, self.equation.D)*0.1)
         
     def forward(self, inputs):
         dw, x = inputs[0], inputs[1]
-        y, z = self.init_variables(x.shape[0])
+        y = torch.ones(x.shape[0], 1) * self.y_init # y_init torch.tensor (M, 1) all ones vector
+        z = torch.ones(x.shape[0], self.equation.D) * self.z_init # z_init torch.tensor (M, D) 
         dt = self.equation.dt
         for t in range(self.equation.step-1):
             y = y - self.equation.f(y)*dt + torch.sum(z*dw[:, t, 1, :], dim=1, keepdim=True)
@@ -82,4 +86,3 @@ class Net4Y(Net4Z):
     
     def init_weights(self):
         return super(Net4Y, self).init_weights()
-    

@@ -19,12 +19,5 @@ if __name__ == '__main__':
     net = Net4Y(equation, config)
     solver = BSDESolver(equation, net, config)
     solver.train()
-    t, x, dw = equation.simulate(scheme='euler')
-    y_mc = equation.terminal_condition(x)
-    x = torch.tensor(x, dtype=torch.float32)
-    dw = torch.tensor(dw, dtype=torch.float32)
-    y_nn = net((dw, x)).detach().numpy()
-    # calculate the mean squared error
-    mse = ((y_nn - y_mc)**2).mean()
-    print(f'Mean Squared Error: {mse}')
+    
         

@@ -45,8 +45,8 @@ class BSDESolver:
     def loss(self, inputs):
         y_pred = self.net(inputs)
         y_mc = self.equation.terminal_condition(inputs[1])
-        diff = y_pred - y_mc
-        loss = torch.mean(diff**2)
+        # l2 loss
+        loss = torch.mean((y_pred - y_mc)**2)
         return loss
 
     def train(self):
@@ -59,13 +59,14 @@ class BSDESolver:
         logging.info(f'Configs: {self.__dict__}')
         start_time = time()
         for epoch in tqdm(range(self.epochs), desc='Training'):
+            self.optimizer.zero_grad()
             inputs = next(iter(self.train_iter))
             loss = self.loss(inputs)
-            self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            logging.info(f'Epoch {epoch+1}/{self.epochs}, Loss: {loss.item()}')
+            logging.info(f'Epoch {epoch+1}/{self.epochs}, Loss: {loss.item()}, Y0: {self.net.y_init.item()}')
             writer.add_scalar('Loss/train', loss.item(), epoch+1)
+            writer.add_scalar('Y0/train', self.net.y_init.item(), epoch+1)
         end_time = time()
         logging.info(f'Training time: {end_time-start_time} seconds')
         writer.close()

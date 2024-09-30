@@ -1,7 +1,7 @@
 # Feyman-Kac settings
 simulation:
-  M: 10000     # num of paths type=int
-  step: 100     # num of time steps type=int
+  M: 10000    # num of paths type=int
+  step: 1000     # num of time steps type=int
   D: 50     # dim of brownian motion type=int
   N: 50   # num of assets type=int
   T: 1.0      # terminal time
@@ -14,8 +14,8 @@ net:
 # Training settings
 train:
   lr: 0.01     # learning rate type=float
-  epochs: 2000  # num of epochs type=int
-  batch_size: 64 # batch size type=int
+  epochs: 1000  # num of epochs type=int
+  batch_size: 30 # batch size type=int
   seed: 42      # random seed type=int
   device: 'cpu' # device type=str
   optimizer: 'adam' # 'adam' or 'sgd' type=str

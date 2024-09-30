@@ -54,7 +54,7 @@ class GeometricBrownianMotion1D(SDE):
         t = np.linspace(0, self.T, self.step+1) # shape: [step+1]
         return t, dW, dt
     
-    def simulate(self, scheme="euler"):
+    def simulate(self, num=None, scheme="euler"):
         '''
         x0: initial value(shape: [M])
         T: terminal time(scalar)
@@ -64,8 +64,12 @@ class GeometricBrownianMotion1D(SDE):
         scheme: simulation scheme, "euler" or "milstein"
         return: time grid, simulated paths
         '''
+        if num is not None:
+            M = num
+        else:
+            M = self.M
         t, dW, dt = self.sample() 
-        x = np.zeros((self.M, self.step+1))  # shape: [M, step+1]
+        x = np.zeros((M, self.step+1))  # shape: [M, step+1]
         x[:, 0] = self.x0
         for i in tqdm(range(self.step), desc="Simulating Steps"):
             if scheme == "euler":
