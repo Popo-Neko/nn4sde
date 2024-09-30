@@ -1,0 +1,52 @@
+INFO:root:Configs: {'lr': 0.01, 'epochs': 2000, 'batch_size': 64, 'seed': 42, 'device': 'cpu', 'optimizer': Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.01
+    maximize: False
+    weight_decay: 0
+), 'equation': <equation.EuropeanBasketOptionCall object at 0x000001B1C6883A40>, 'net': Net4Y(
+  (input_layer): Linear(in_features=5, out_features=64, bias=True)
+  (output_layer): Linear(in_features=64, out_features=5, bias=True)
+  (relu): ReLU()
+  (net): Net4Z(
+    (input_layer): Linear(in_features=5, out_features=64, bias=True)
+    (output_layer): Linear(in_features=64, out_features=5, bias=True)
+    (relu): ReLU()
+  )
+), 'train_iter': <torch.utils.data.dataloader.DataLoader object at 0x000001B1E313D5B0>}
+INFO:root:Epoch 1/2000, Loss: 0.9713979363441467
+INFO:root:Epoch 2/2000, Loss: 0.8510404825210571
+INFO:root:Epoch 3/2000, Loss: 0.7686973810195923
+INFO:root:Epoch 4/2000, Loss: 0.7338401675224304
+INFO:root:Epoch 5/2000, Loss: 0.7378600239753723
+INFO:root:Epoch 6/2000, Loss: 0.7536116242408752
+INFO:root:Epoch 7/2000, Loss: 0.7567950487136841
+INFO:root:Epoch 8/2000, Loss: 0.7474223971366882
+INFO:root:Epoch 9/2000, Loss: 0.7339926958084106
+INFO:root:Epoch 10/2000, Loss: 0.7237196564674377
+INFO:root:Epoch 11/2000, Loss: 0.7182759642601013
+INFO:root:Epoch 12/2000, Loss: 0.7158161997795105
+INFO:root:Epoch 13/2000, Loss: 0.7146533727645874
+INFO:root:Epoch 14/2000, Loss: 0.7123857736587524
+INFO:root:Epoch 15/2000, Loss: 0.708347499370575
+INFO:root:Epoch 16/2000, Loss: 0.7029203772544861
+INFO:root:Epoch 17/2000, Loss: 0.69776451587677
+INFO:root:Epoch 18/2000, Loss: 0.69390469789505
+INFO:root:Epoch 19/2000, Loss: 0.6912121772766113
+INFO:root:Epoch 20/2000, Loss: 0.6892126202583313
+INFO:root:Epoch 21/2000, Loss: 0.686475932598114
+INFO:root:Epoch 22/2000, Loss: 0.6825078725814819
+INFO:root:Epoch 23/2000, Loss: 0.6778817772865295
+INFO:root:Epoch 24/2000, Loss: 0.6733677387237549
+INFO:root:Epoch 25/2000, Loss: 0.6696923971176147
+INFO:root:Epoch 26/2000, Loss: 0.6669101119041443
+INFO:root:Epoch 27/2000, Loss: 0.6643008589744568
+INFO:root:Epoch 28/2000, Loss: 0.6612289547920227
+INFO:root:Epoch 29/2000, Loss: 0.6580168008804321
+INFO:root:Epoch 30/2000, Loss: 0.6555553674697876

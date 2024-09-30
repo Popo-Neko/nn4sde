@@ -26,7 +26,7 @@ class Net4Z(nn.Module):
         x = self.relu(self.input_layer(x))
         for layer in self.hidden_layers:
             x = self.relu(layer(x))
-        x = self.relu(self.output_layer(x))
+        x = self.output_layer(x)
         return x
     
     def init_weights(self):
@@ -59,17 +59,17 @@ class Net4Y(Net4Z):
                 
         super(Net4Y, self).__init__(self.input_dim, self.hidden_dim, self.output_dim)
         self.net = Net4Z(self.input_dim, self.hidden_dim, self.output_dim)
-        
+    
+    def init_variables(self, batch_size):
         # y_init torch.tensor (M, 1) all ones vector
-        self.y_init = torch.ones(self.equation.M, 1)
-        # z_init torch.tensor (M, D) normal random vector N(0, 0.025)
-        self.z_init = torch.ones(self.equation.M, self.equation.D) * 0.05
-        
+        y_init = torch.ones(batch_size, 1)
+        # z_init torch.tensor (M, D) 
+        z_init = torch.ones(batch_size, self.equation.D) * 0.1
+        return y_init, z_init
         
     def forward(self, inputs):
         dw, x = inputs[0], inputs[1]
-        y = self.y_init
-        z = self.z_init
+        y, z = self.init_variables(x.shape[0])
         dt = self.equation.dt
         for t in range(self.equation.step-1):
             y = y - self.equation.f(y)*dt + torch.sum(z*dw[:, t, 1, :], dim=1, keepdim=True)

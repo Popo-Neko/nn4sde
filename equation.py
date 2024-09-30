@@ -109,7 +109,8 @@ class GeometricBrownianMotionND(SDE):
     def mu(self, x, t=None):
         # x: (M, N) M = path
         # return: (M, N)
-        results = np.zeros((self.M, self.N))
+        M = x.shape[0]
+        results = np.zeros((M, self.N))
         for i in range(self.N):
             results[:, i] = x[:, i]*self.drift[i]
         return results
@@ -117,8 +118,9 @@ class GeometricBrownianMotionND(SDE):
     def sigma(self, x, t=None):
         # x: (M, N) M = path
         # return: (M, N, D)
-        results = np.zeros((x.shape[0], self.N, self.D))
-        for i in range(self.M):
+        M = x.shape[0]
+        results = np.zeros((M, self.N, self.D))
+        for i in range(M):
             results[i] = x[i]*self.volatility
         return results
     
@@ -204,19 +206,20 @@ class EuropeanBasketOptionCall(GeometricBrownianMotionND):
         return -y*self.interest_rate
     
     def terminal_condition(self, x):
+        M = x.shape[0]
         market_value = x[:, -1, :] * self.shares.T
         total_value = market_value.sum(axis=1)
 
-        weight = np.zeros((self.M, self.N)) if isinstance(x, np.ndarray) else torch.zeros((self.M, self.N), dtype=x.dtype)
+        weight = np.zeros((M, self.N)) if isinstance(x, np.ndarray) else torch.zeros((M, self.N), dtype=x.dtype)
         for i in range(self.N):
             weight[:, i] = market_value[:, i] / total_value
 
-        y = (weight * x[:, -1, :]).sum(axis=1).reshape((self.M, 1))
+        y = (weight * x[:, -1, :]).sum(axis=1).reshape((M, 1))
 
         if isinstance(x, np.ndarray):
-            return np.maximum(0, (y - self.strike).reshape((self.M, 1)))
+            return np.maximum(0, (y - self.strike).reshape((M, 1)))
         else:
-            return torch.maximum(torch.tensor(0.0).to(y.device), (y - self.strike).reshape((self.M, 1)))
+            return torch.maximum(torch.tensor(0.0).to(y.device), (y - self.strike).reshape((M, 1)))
 
 
      
