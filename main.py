@@ -3,9 +3,10 @@ from network import Net4Y
 from nn_solver import BSDESolver
 from equation import EuropeanBasketOptionCall
 import numpy as np
-import pandas as pd
 from torch.utils.data import DataLoader
 import torch
+torch.set_default_dtype(torch.float64)
+from sampler import Sampler
 
 if __name__ == '__main__':
     # configs

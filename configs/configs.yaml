@@ -1,21 +1,21 @@
-# Feyman-Kac settings
+# Feyman-Kac settings for class equation and bsde
 simulation:
-  M: 10000    # num of paths type=int
+  M: 64    # num of paths type=int or batch_size 
   step: 100     # num of time steps type=int
   D: 50     # dim of brownian motion type=int
   N: 50   # num of assets type=int
   T: 1.0      # terminal time
   x0: 1       # initial value of X
 
-# Neural network settings
+# Neural network settings for class nn.Module
 net:
   hidden_dim: [256, 256, 256] # hidden layer dimensions type=list
 
-# Training settings
+# Training settings for class solver
 train:
   lr: 0.01     # learning rate type=float
-  epochs: 125  # num of epochs type=int
-  batch_size: 30 # batch size type=int
+  epochs: 300  # num of epochs type=int
+  batch_size: 128 # batch size type=int
   seed: 42      # random seed type=int
   device: 'cpu' # device type=str
   optimizer: 'adam' # 'adam' or 'sgd' type=str

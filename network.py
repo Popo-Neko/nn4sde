@@ -67,8 +67,8 @@ class Net4Y(Net4Z):
         super(Net4Y, self).__init__(self.input_dim, self.hidden_dim, self.output_dim)
         self.net = Net4Z(self.input_dim, self.hidden_dim, self.output_dim)
         
-        self.y_init = nn.Parameter(torch.ones(1))
-        self.z_init = nn.Parameter(torch.ones(1, self.equation.D)*0.1)
+        self.y_init = nn.Parameter(torch.ones(1, dtype=torch.float64)*0.01)
+        self.z_init = nn.Parameter(torch.ones(1, self.equation.D, dtype=torch.float64)*0.1)
         
     def forward(self, inputs):
         dw, x = inputs[0], inputs[1]

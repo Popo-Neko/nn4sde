@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd 
 import matplotlib.pyplot as plt
 import abc
 from tqdm import tqdm
@@ -103,6 +102,7 @@ class GeometricBrownianMotionND(SDE):
         self.D = self.volatility.shape[1]
         self.N = self.drift.shape[0]
         self.dt = self.T/self.step
+        self.step, self.M= int(self.step), int(self.M) # number of time steps and paths
         # x0 shape = [N, 1]
         if x0 is None:
             self.x0 = np.array([self.x0 for i in range(self.N)]).reshape((self.N, 1))
@@ -128,7 +128,7 @@ class GeometricBrownianMotionND(SDE):
             results[i] = x[i]*self.volatility
         return results
     
-    def simulate(self, scheme="euler"):
+    def simulate(self, num=None, scheme="euler"):
         '''
         x0: initial value(shape: [M, N])
         T: terminal time(scalar)
@@ -136,27 +136,29 @@ class GeometricBrownianMotionND(SDE):
         M: number of paths(scalar)
         N: number of assets(scalar)
         scheme: simulation scheme, "euler" or "milstein"
+        for monte carlo simulation, num is None
+        for training, num is the batch size
         return: time grid, simulated paths
         '''
-        self.step, self.M= int(self.step), int(self.M) # number of time steps and paths
-        # dt: time step
-        dt = self.T/self.step # time step
-        
+        if num is None:
+            M = self.M
+        else:
+            M = num
         # dW: brownian motion, shape: [M, step, N, D]
-        dW = np.sqrt(dt)*np.random.randn(self.M, self.step, self.D) # shape: [M, step, D]
+        dW = np.sqrt(self.dt)*np.random.randn(M, self.step, self.D) # shape: [M, step, D]
         # reshape dW to [M, step, N, D]
         dW = np.repeat(dW[:, :, np.newaxis, :], self.N, axis=2)
         
         # t: time grid, shape: [step+1] t0, t1, ..., tN
         t = np.linspace(0, self.T, self.step+1) # shape: [step+1]
         
-        x = np.zeros((self.M, self.step+1, self.N))  # shape: [M, step+1, N]
+        x = np.zeros((M, self.step+1, self.N))  # shape: [M, step+1, N]
         x[:, 0, :] = self.x0.T
-        for i in tqdm(range(self.step), desc="Simulating Steps"):
+        for i in tqdm(range(self.step), desc="Simulating Steps", disable= False if num is None else True):
             if scheme == "euler":
-                x[:, i+1, :] = x[:, i, :] + self.mu(x[:, i, :], t[i])*dt + np.sum(self.sigma(x[:, i, :], t[i])*dW[:, i, :, :], axis=2)
+                x[:, i+1, :] = x[:, i, :] + self.mu(x[:, i, :], t[i])*self.dt + np.sum(self.sigma(x[:, i, :], t[i])*dW[:, i, :, :], axis=2)
             elif scheme == "milstein":
-                x[:, i+1, :] = x[:, i, :] + self.mu(x[:, i, :], t[i])*dt + np.sum(self.sigma(x[:, i, :], t[i])*dW[:, i, :, :], axis=2) + 0.5*np.sum(self.sigma(x[:, i, :], t[i])*self.sigma(x[:, i, :], t[i])*(dW[:, i, :, :]**2 - dt), axis=2)
+                x[:, i+1, :] = x[:, i, :] + self.mu(x[:, i, :], t[i])*self.dt + np.sum(self.sigma(x[:, i, :], t[i])*dW[:, i, :, :], axis=2) + 0.5*np.sum(self.sigma(x[:, i, :], t[i])*self.sigma(x[:, i, :], t[i])*(dW[:, i, :, :]**2 - self.dt), axis=2)
             else:
                 raise ValueError("scheme must be 'euler' or 'milstein'")
         return t, x, dW
