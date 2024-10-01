@@ -46,7 +46,7 @@ class Net4Z(nn.Module):
         nn.init.zeros_(self.output_layer.bias)
  
  
-class Net4Y(Net4Z):
+class Net4Y(nn.Module):
     def __init__(self, 
                  equation,
                  configs: yaml):
@@ -55,6 +55,7 @@ class Net4Y(Net4Z):
         hidden_dim: a list of hidden layer dimensions
         output_dim: number of output features should be same as the dim of brownian motion D
         '''
+        super(Net4Y, self).__init__()
         self.equation = equation
         self.input_dim = self.equation.N
         self.output_dim = self.equation.D
@@ -64,11 +65,11 @@ class Net4Y(Net4Z):
             for key, value in config_data['net'].items():
                 setattr(self, key, value)
                 
-        super(Net4Y, self).__init__(self.input_dim, self.hidden_dim, self.output_dim)
+        
         self.net = Net4Z(self.input_dim, self.hidden_dim, self.output_dim)
         
-        self.y_init = nn.Parameter(torch.ones(1, dtype=torch.float64)*0.01)
-        self.z_init = nn.Parameter(torch.ones(1, self.equation.D, dtype=torch.float64)*0.1)
+        self.y_init = nn.Parameter(torch.ones(1, dtype=torch.float64)*10)
+        self.z_init = nn.Parameter(torch.ones(1, self.equation.D, dtype=torch.float64))
         
     def forward(self, inputs):
         dw, x = inputs[0], inputs[1]
@@ -80,8 +81,6 @@ class Net4Y(Net4Z):
             z = self.net(x[:, t, :])
         # terminal condition
         y = y - self.equation.f(y)*dt + torch.sum(z*dw[:, -1, 1, :], dim=1, keepdim=True)
-        # take max(0, y)
-        y = torch.max(y, torch.zeros_like(y))
         return y    
     
     def init_weights(self):
