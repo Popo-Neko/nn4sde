@@ -1,0 +1,47 @@
+INFO:root:Configs: {'lr': 0.01, 'epochs': 3000, 'batch_size': 128, 'seed': 42, 'device': 'cpu', 'optimizer': Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.01
+    maximize: False
+    weight_decay: 0
+), 'equation': <equation.EuropeanBasketOptionCall object at 0x000001D1B7B10860>, 'net': Net4Y(
+  (net): Net4Z(
+    (hidden_layers): Sequential(
+      (0): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (1): ReLU()
+      (2): Linear(in_features=256, out_features=256, bias=True)
+      (3): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (4): ReLU()
+      (5): ReLU()
+      (6): Linear(in_features=256, out_features=256, bias=True)
+      (7): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (8): ReLU()
+    )
+    (input_layer): Linear(in_features=50, out_features=256, bias=True)
+    (output_layer): Linear(in_features=256, out_features=50, bias=True)
+    (relu): ReLU()
+  )
+), 'train_iter': <sampler.Sampler object at 0x000001D1B6216600>}
+INFO:root:Epoch 1/3000, Loss: 295.69982497567935, Y0: 9.99000000001086
+INFO:root:Epoch 2/3000, Loss: 318.49268148022566, Y0: 9.980048395571622
+INFO:root:Epoch 3/3000, Loss: 259.4236849668637, Y0: 9.970073683142516
+INFO:root:Epoch 4/3000, Loss: 235.10030274187986, Y0: 9.960047614422264
+INFO:root:Epoch 5/3000, Loss: 145.29568789755712, Y0: 9.949992615983632
+INFO:root:Epoch 6/3000, Loss: 189.37030070271982, Y0: 9.939978634961841
+INFO:root:Epoch 7/3000, Loss: 205.3730398050313, Y0: 9.929983393345063
+INFO:root:Epoch 8/3000, Loss: 225.44966971063357, Y0: 9.919948790428759
+INFO:root:Epoch 9/3000, Loss: 210.4375264666122, Y0: 9.909895411758821
+INFO:root:Epoch 10/3000, Loss: 239.51070031941276, Y0: 9.900218108757612
+INFO:root:Epoch 11/3000, Loss: 209.05039685229184, Y0: 9.890763388999371
+INFO:root:Epoch 12/3000, Loss: 167.58608440359222, Y0: 9.881138095850377
+INFO:root:Epoch 13/3000, Loss: 172.65822331662818, Y0: 9.871431703823568
+INFO:root:Epoch 14/3000, Loss: 200.72352281170507, Y0: 9.86163915441836
+INFO:root:Epoch 15/3000, Loss: 161.2353967054497, Y0: 9.851857190578441
+INFO:root:Epoch 16/3000, Loss: 372.8439449736194, Y0: 9.842325397386723
+INFO:root:Epoch 17/3000, Loss: 630.3504547968205, Y0: 9.83307966406493
