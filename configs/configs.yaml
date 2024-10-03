@@ -1,6 +1,6 @@
 # Feyman-Kac settings for class equation and bsde
 simulation:
-  M: 100000    # num of paths type=int or batch_size 
+  M: 10000    # num of paths type=int or batch_size 
   step: 50     # num of time steps type=int
   D: 50     # dim of brownian motion type=int
   N: 50   # num of assets type=int
@@ -14,7 +14,7 @@ net:
 # Training settings for class solver
 train:
   lr: 0.01     # learning rate type=float
-  epochs: 3000  # num of epochs type=int
+  epochs: 5000  # num of epochs type=int
   batch_size: 128 # batch size type=int
   seed: 42      # random seed type=int
   device: 'cpu' # device type=str
